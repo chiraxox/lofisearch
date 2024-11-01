@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Search and Calculator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.5s;
+            position: relative;
+            padding: 10px; /* Added padding for smaller screens */
+            box-sizing: border-box; /* Ensure padding is included in width */
+        }
+        #bookmarkBar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 1000;
+            color: white;
+            font-weight: bold;
+        }
+        #bookmarkBar a {
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+        }
+        #bookmarkBar a:hover {
+            text-decoration: underline;
+        }
+        button {
+            padding: 5px 10px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #357ae8;
+        }
+        input[type="text"] {
+            width: 100%;
+            max-width: 300px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        #history {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            max-width: 300px;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        #history h2 {
+            margin: 0;
+            font-size: 18px;
+            text-align: right;
+        }
+        #history ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #history li {
+            padding: 5px 0;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        #history li:hover {
+            color: #4285f4;
+            text-decoration: underline;
+        }
+        #calculator {
+            display: none;
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #calculator input {
+            width: 100%;
+            max-width: 200px;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-align: right;
+        }
+        #calculator button {
+            width: 40px;
+            margin: 2px;
+        }
+        #exitButton {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #exitButton:hover {
+            background-color: #c9302c;
+        }
+        #bottomLeftButtons {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bookmarkBar">
+        <div>
+            <a href="https://www.youtube.com" target="_blank" aria-label="YouTube">YouTube</a>
+            <a href="https://mail.google.com" target="_blank" aria-label="Gmail">Gmail</a>
+            <a href="https://chat.openai.com" target="_blank" aria-label="ChatGPT">ChatGPT</a>
+        </div>
+    </div>
+
+    <h1 id="searchTitle">Google Search</h1>
+    <input type="text" id="searchQuery" placeholder="Search Google..." aria-label="Search Google">
+    <button onclick="searchGoogle()">Search</button>
+
+    <div id="history">
+        <h2>Search History</h2>
+        <ul id="historyList"></ul>
+        <button id="clearHistoryButton" onclick="clearHistory()">Clear History</button>
+    </div>
+
+    <div id="calculator">
+        <input type="text" id="calcInput" placeholder="0" disabled>
+        <div>
+            <button onclick="appendToCalc('1')">1</button>
+            <button onclick="appendToCalc('2')">2</button>
+            <button onclick="appendToCalc('3')">3</button>
+            <button onclick="appendToCalc('+')">+</button>
+        </div>
+        <div>
+            <button onclick="appendToCalc('4')">4</button>
+            <button onclick="appendToCalc('5')">5</button>
+            <button onclick="appendToCalc('6')">6</button>
+            <button onclick="appendToCalc('-')">-</button>
+        </div>
+        <div>
+            <button onclick="appendToCalc('7')">7</button>
+            <button onclick="appendToCalc('8')">8</button>
+            <button onclick="appendToCalc('9')">9</button>
+            <button onclick="appendToCalc('*')">*</button>
+        </div>
+        <div>
+            <button onclick="calculate()">=</button>
+            <button onclick="clearCalc()">C</button>
+            <button onclick="appendToCalc('0')">0</button>
+            <button onclick="appendToCalc('/')">/</button>
+        </div>
+    </div>
+
+    <button id="exitButton" onclick="exitApp()">Exit</button>
+
+    <div id="bottomLeftButtons">
+        <button id="toggleHistoryButton" onclick="toggleHistory()">Show History</button>
+        <button id="toggleCalculatorButton" onclick="toggleCalculator()">Show Calculator</button>
+    </div>
+
+    <script>
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function setGradientBackground() {
+            const color1 = getRandomColor();
+            const color2 = getRandomColor();
+            document.body.style.background = `linear-gradient(${color1}, ${color2})`;
+        }
+
+        setGradientBackground();
+        setInterval(setGradientBackground, 5000);
+
+        function searchGoogle() {
+            const query = document.getElementById("searchQuery").value;
+            if (query) {
+                saveSearch(query);
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+            }
+        }
+
+        function saveSearch(query) {
+            const historyList = document.getElementById("historyList");
+            const li = document.createElement("li");
+            li.textContent = query;
+            li.onclick = function() { searchGoogleFromHistory(query); };
+            historyList.appendChild(li);
+            updateHistoryInStorage();
+        }
+
+        function searchGoogleFromHistory(query) {
+            document.getElementById("searchQuery").value = query;
+            searchGoogle();
+        }
+
+        function updateHistoryInStorage() {
+            const historyList = document.getElementById("historyList").children;
+            const historyArray = [];
+            for (let i = 0; i < historyList.length; i++) {
+                historyArray.push(historyList[i].textContent);
+            }
+            localStorage.setItem('searchHistory', JSON.stringify(historyArray));
+        }
+
+        function displayHistory() {
+            const storedHistory = JSON.parse(localStorage.getItem('searchHistory'));
+            const historyList = document.getElementById("historyList");
+            historyList.innerHTML = '';
+            if (storedHistory) {
+                storedHistory.forEach(query => {
+                    const li = document.createElement("li");
+                    li.textContent = query;
+                    li.onclick = function() { searchGoogleFromHistory(query); };
+                    historyList.appendChild(li);
+                });
+            }
+        }
+
+        function toggleHistory() {
+            const history = document.getElementById("history");
+            const toggleButton = document.getElementById("toggleHistoryButton");
+            if (history.style.display === "none") {
+                history.style.display = "block";
+                toggleButton.textContent = "Hide History";
+            } else {
+                history.style.display = "none";
+                toggleButton.textContent = "Show History";
+            }
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('searchHistory');
+            displayHistory();
+            alert("Search history cleared.");
+        }
+
+        function toggleCalculator() {
+            const calculator = document.getElementById("calculator");
+            const toggleButton = document.getElementById("toggleCalculatorButton");
+            calculator.style.display = calculator.style.display === "none" ? "block" : "none";
+            toggleButton.textContent = calculator.style.display === "block" ? "Hide Calculator" : "Show Calculator";
+        }
+
+        function appendToCalc(value) {
+            const calcInput = document.getElementById("calcInput");
+            calcInput.value += value;
+        }
+
+        function calculate() {
+            const calcInput = document.getElementById("calcInput");
+            try {
+                calcInput.value = eval(calcInput.value) || "";
+            } catch (error) {
+                alert("Invalid calculation. Please try again.");
+                clearCalc();
+            }
+        }
+
+        function clearCalc() {
+            document.getElementById("calcInput").value = "";
+        }
+
+        function handleKeyPress(event) {
+            const key = event.key;
+            const operators = ['+', '-', '*', '/'];
+
+            if (!isNaN(key) || operators.includes(key)) {
+                appendToCalc(key);
+            } else if (key === 'Enter') {
+                calculate();
+            } else if (key === 'Backspace') {
+                const calcInput = document.getElementById("calcInput");
+                calcInput.value = calcInput.value.slice(0, -1); // Remove last character
+            } else if (key === 'Escape') {
+                clearCalc(); // Clear calculator on Escape key
+            }
+        }
+
+        // Add keyboard event listener for calculator
+        window.addEventListener('keydown', handleKeyPress);
+
+        function exitApp() {
+            if (confirm("Are you sure you want to exit?")) {
+                window.close();
+            }
+        }
+
+        window.onload = displayHistory; // Show history on page load
+    </script>
+</body>
+</html>
